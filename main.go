@@ -128,6 +128,9 @@ func main() {
 	flag.Parse()
 
 	s := &Server{}
+
+	// Register the rstore client here
+
 	client, err := ghbclient.GetClientInternal()
 	if err != nil {
 		log.Fatalf("Unable to reach GHB")
