@@ -555,7 +555,7 @@ var file_store_proto_rawDesc = []byte{
 	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x65, 0x72, 0x22, 0x25,
 	0x0a, 0x0d, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
 	0x14, 0x0a, 0x05, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x05,
-	0x63, 0x6f, 0x75, 0x6e, 0x74, 0x32, 0xad, 0x02, 0x0a, 0x0d, 0x52, 0x53, 0x74, 0x6f, 0x72, 0x65,
+	0x63, 0x6f, 0x75, 0x6e, 0x74, 0x32, 0xad, 0x02, 0x0a, 0x0d, 0x50, 0x53, 0x74, 0x6f, 0x72, 0x65,
 	0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x33, 0x0a, 0x04, 0x52, 0x65, 0x61, 0x64, 0x12,
 	0x13, 0x2e, 0x70, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x2e, 0x52, 0x65, 0x61, 0x64, 0x52, 0x65, 0x71,
 	0x75, 0x65, 0x73, 0x74, 0x1a, 0x14, 0x2e, 0x70, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x2e, 0x52, 0x65,
@@ -609,16 +609,16 @@ var file_store_proto_goTypes = []interface{}{
 var file_store_proto_depIdxs = []int32{
 	10, // 0: pstore.ReadResponse.value:type_name -> google.protobuf.Any
 	10, // 1: pstore.WriteRequest.value:type_name -> google.protobuf.Any
-	0,  // 2: pstore.RStoreService.Read:input_type -> pstore.ReadRequest
-	2,  // 3: pstore.RStoreService.Write:input_type -> pstore.WriteRequest
-	4,  // 4: pstore.RStoreService.GetKeys:input_type -> pstore.GetKeysRequest
-	6,  // 5: pstore.RStoreService.Delete:input_type -> pstore.DeleteRequest
-	8,  // 6: pstore.RStoreService.Count:input_type -> pstore.CountRequest
-	1,  // 7: pstore.RStoreService.Read:output_type -> pstore.ReadResponse
-	3,  // 8: pstore.RStoreService.Write:output_type -> pstore.WriteResponse
-	5,  // 9: pstore.RStoreService.GetKeys:output_type -> pstore.GetKeysResponse
-	7,  // 10: pstore.RStoreService.Delete:output_type -> pstore.DeleteResponse
-	9,  // 11: pstore.RStoreService.Count:output_type -> pstore.CountResponse
+	0,  // 2: pstore.PStoreService.Read:input_type -> pstore.ReadRequest
+	2,  // 3: pstore.PStoreService.Write:input_type -> pstore.WriteRequest
+	4,  // 4: pstore.PStoreService.GetKeys:input_type -> pstore.GetKeysRequest
+	6,  // 5: pstore.PStoreService.Delete:input_type -> pstore.DeleteRequest
+	8,  // 6: pstore.PStoreService.Count:input_type -> pstore.CountRequest
+	1,  // 7: pstore.PStoreService.Read:output_type -> pstore.ReadResponse
+	3,  // 8: pstore.PStoreService.Write:output_type -> pstore.WriteResponse
+	5,  // 9: pstore.PStoreService.GetKeys:output_type -> pstore.GetKeysResponse
+	7,  // 10: pstore.PStoreService.Delete:output_type -> pstore.DeleteResponse
+	9,  // 11: pstore.PStoreService.Count:output_type -> pstore.CountResponse
 	7,  // [7:12] is the sub-list for method output_type
 	2,  // [2:7] is the sub-list for method input_type
 	2,  // [2:2] is the sub-list for extension type_name

@@ -49,7 +49,7 @@ message CountResponse {
 }
 
 
-service RStoreService {
+service PStoreService {
   rpc Read (ReadRequest) returns (ReadResponse) {};
   rpc Write (WriteRequest) returns (WriteResponse) {};
   rpc GetKeys (GetKeysRequest) returns (GetKeysResponse) {};
