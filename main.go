@@ -12,8 +12,6 @@ import (
 
 	ghbclient "github.com/brotherlogic/githubridge/client"
 
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -25,11 +23,7 @@ var (
 	metricsPort = flag.Int("metrics_port", 8081, "Metrics port")
 )
 
-var (
-	wCount = promauto.NewCounterVec(prometheus.CounterOpts{
-		Name: "rstore_wcount",
-	}, []string{"client", "code"})
-)
+var ()
 
 type Server struct {
 	gclient ghbclient.GithubridgeClient
