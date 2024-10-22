@@ -13,6 +13,10 @@ type rstore_wrapper struct {
 	rc rstore_client.RStoreClient
 }
 
+func (r *rstore_wrapper) Name() string {
+	return "Redis"
+}
+
 func (r *rstore_wrapper) Write(ctx context.Context, req *pb.WriteRequest) (*pb.WriteResponse, error) {
 	resp, err := r.rc.Write(ctx, &rspb.WriteRequest{
 		Key:   req.GetKey(),
