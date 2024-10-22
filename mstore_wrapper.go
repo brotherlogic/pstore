@@ -68,7 +68,7 @@ func (r *mstore_wrapper) GetKeys(ctx context.Context, req *pb.GetKeysRequest) (*
 }
 
 func (r *mstore_wrapper) Count(ctx context.Context, req *pb.CountRequest) (*pb.CountResponse, error) {
-	resp, err := r.rm.Count(ctx, &mspb.CountRequest{
+	resp, err := r.mc.Count(ctx, &mspb.CountRequest{
 		Counter: req.GetCounter(),
 	})
 	if err != nil {
