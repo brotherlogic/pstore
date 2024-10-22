@@ -13,6 +13,10 @@ type mstore_wrapper struct {
 	mc mstore_client.MStoreClient
 }
 
+func (m *mstore_wrapper) Name() string {
+	return "Mongo"
+}
+
 func (r *mstore_wrapper) Write(ctx context.Context, req *pb.WriteRequest) (*pb.WriteResponse, error) {
 	resp, err := r.mc.Write(ctx, &mspb.WriteRequest{
 		Key:   req.GetKey(),

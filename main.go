@@ -13,6 +13,8 @@ import (
 	pb "github.com/brotherlogic/pstore/proto"
 	rstore_client "github.com/brotherlogic/rstore/client"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -24,7 +26,11 @@ var (
 	metricsPort = flag.Int("metrics_port", 8081, "Metrics port")
 )
 
-var ()
+var (
+	wCount = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "rstore_wcount",
+	}, []string{"client", "code"})
+)
 
 type Server struct {
 	gclient ghbclient.GithubridgeClient
@@ -38,6 +44,7 @@ type pstore interface {
 	GetKeys(ctx context.Context, req *pb.GetKeysRequest) (*pb.GetKeysResponse, error)
 	Delete(ctx context.Context, req *pb.DeleteRequest) (*pb.DeleteResponse, error)
 	Count(ctx context.Context, req *pb.CountRequest) (*pb.CountResponse, error)
+	Name() string
 }
 
 func (s *Server) Read(ctx context.Context, req *pb.ReadRequest) (*pb.ReadResponse, error) {
@@ -61,6 +68,7 @@ func (s *Server) Write(ctx context.Context, req *pb.WriteRequest) (*pb.WriteResp
 	var writes []*pb.WriteResponse
 	for _, c := range s.clients {
 		resp, err := c.Write(ctx, req)
+		wCount.With(prometheus.Labels{"client": c.Name(), "code": fmt.Sprintf("%v", status.Code(err))}).Inc()
 		if err != nil {
 			log.Printf("Error on read: %v", err)
 		}
