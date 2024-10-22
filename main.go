@@ -8,9 +8,10 @@ import (
 	"net"
 	"net/http"
 
-	pb "github.com/brotherlogic/pstore/proto"
-
 	ghbclient "github.com/brotherlogic/githubridge/client"
+	mstore_client "github.com/brotherlogic/mstore/client"
+	pb "github.com/brotherlogic/pstore/proto"
+	rstore_client "github.com/brotherlogic/rstore/client"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
@@ -28,10 +29,10 @@ var ()
 type Server struct {
 	gclient ghbclient.GithubridgeClient
 
-	clients []pb.PStoreServiceClient
+	clients []pstore
 }
 
-type rstore interface {
+type pstore interface {
 	Read(ctx context.Context, req *pb.ReadRequest) (*pb.ReadResponse, error)
 	Write(ctx context.Context, req *pb.WriteRequest) (*pb.WriteResponse, error)
 	GetKeys(ctx context.Context, req *pb.GetKeysRequest) (*pb.GetKeysResponse, error)
@@ -130,6 +131,17 @@ func main() {
 	s := &Server{}
 
 	// Register the rstore client here
+	rsc, err := rstore_client.GetClient()
+	if err != nil {
+		log.Fatalf("Unable to reach rstore client")
+	}
+	s.clients = append(s.clients, &rstore_wrapper{rc: rsc})
+
+	msc, err := mstore_client.GetClient()
+	if err != nil {
+		log.Fatalf("Unable to get mstore client")
+	}
+	s.clients = append(s.clients, &mstore_wrapper{mc: msc})
 
 	client, err := ghbclient.GetClientInternal()
 	if err != nil {
