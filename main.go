@@ -8,10 +8,10 @@ import (
 	"net"
 	"net/http"
 
+	ghbclient "github.com/brotherlogic/githubridge/client"
+	mstore_client "github.com/brotherlogic/mstore/client"
 	pb "github.com/brotherlogic/pstore/proto"
 	rstore_client "github.com/brotherlogic/rstore/client"
-
-	ghbclient "github.com/brotherlogic/githubridge/client"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
@@ -136,6 +136,12 @@ func main() {
 		log.Fatalf("Unable to reach rstore client")
 	}
 	s.clients = append(s.clients, &rstore_wrapper{rc: rsc})
+
+	msc, err := mstore_client.GetClient()
+	if err != nil {
+		log.Fatalf("Unable to get mstore client")
+	}
+	s.clients = append(s.clients, &mstore_wrapper{mc: msc})
 
 	client, err := ghbclient.GetClientInternal()
 	if err != nil {

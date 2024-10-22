@@ -4,6 +4,7 @@ go 1.23.2
 
 require (
 	github.com/brotherlogic/githubridge v0.2802.0
+	github.com/brotherlogic/mstore v0.0.0-20241010133632-9c6a2163a2ec
 	github.com/brotherlogic/rstore v0.59.0
 	github.com/prometheus/client_golang v1.20.5
 	google.golang.org/grpc v1.67.1
