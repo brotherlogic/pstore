@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	pb "github.com/brotherlogic/pstore/proto"
+	rstore_client "github.com/brotherlogic/rstore/client"
 
 	ghbclient "github.com/brotherlogic/githubridge/client"
 
@@ -28,10 +29,10 @@ var ()
 type Server struct {
 	gclient ghbclient.GithubridgeClient
 
-	clients []pb.PStoreServiceClient
+	clients []pstore
 }
 
-type rstore interface {
+type pstore interface {
 	Read(ctx context.Context, req *pb.ReadRequest) (*pb.ReadResponse, error)
 	Write(ctx context.Context, req *pb.WriteRequest) (*pb.WriteResponse, error)
 	GetKeys(ctx context.Context, req *pb.GetKeysRequest) (*pb.GetKeysResponse, error)
@@ -130,6 +131,11 @@ func main() {
 	s := &Server{}
 
 	// Register the rstore client here
+	rsc, err := rstore_client.GetClient()
+	if err != nil {
+		log.Fatalf("Unable to reach rstore client")
+	}
+	s.clients = append(s.clients, &rstore_wrapper{rc: rsc})
 
 	client, err := ghbclient.GetClientInternal()
 	if err != nil {
