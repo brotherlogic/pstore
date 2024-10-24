@@ -1,3 +1,3 @@
 # pstore
 
-Basic frontend for storing vanilla protocol buffers
+Basic frontend for storing protocol buffers
