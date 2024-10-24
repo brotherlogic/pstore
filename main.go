@@ -30,6 +30,14 @@ var (
 	wCount = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "rstore_wcount",
 	}, []string{"client", "code"})
+
+	cCount = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "rstore_ccount",
+	}, []string{"client", "code"})
+
+	cCountDiffs = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "rstore_ccount_diffs",
+	})
 )
 
 type Server struct {
@@ -120,6 +128,7 @@ func (s *Server) Count(ctx context.Context, req *pb.CountRequest) (*pb.CountResp
 	var counts []*pb.CountResponse
 	for _, c := range s.clients {
 		resp, err := c.Count(ctx, req)
+		cCount.With(prometheus.Labels{"client": c.Name(), "code": fmt.Sprintf("%v", status.Code(err))}).Inc()
 		if err != nil {
 			log.Printf("Error on read: %v", err)
 		}
@@ -128,6 +137,13 @@ func (s *Server) Count(ctx context.Context, req *pb.CountRequest) (*pb.CountResp
 
 	if len(counts) == 0 {
 		return nil, status.Errorf(codes.Internal, "Unable to process %v", req)
+	}
+
+	val := counts[0].GetCount()
+	for _, c := range counts {
+		if c.GetCount() != val {
+			cCountDiffs.Inc()
+		}
 	}
 
 	return counts[0], nil
