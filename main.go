@@ -30,6 +30,9 @@ var (
 	wCount = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "rstore_wcount",
 	}, []string{"client", "code"})
+	rCount = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "rstore_rcount",
+	}, []string{"client", "code"})
 
 	cCount = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "rstore_ccount",
@@ -59,6 +62,8 @@ func (s *Server) Read(ctx context.Context, req *pb.ReadRequest) (*pb.ReadRespons
 	var reads []*pb.ReadResponse
 	for _, c := range s.clients {
 		resp, err := c.Read(ctx, req)
+		rCount.With(prometheus.Labels{"client": c.Name(), "code": fmt.Sprintf("%v", err)}).Inc()
+
 		if err != nil {
 			log.Printf("Error on read: %v", err)
 		}
