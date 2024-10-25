@@ -4,7 +4,8 @@ go 1.23.2
 
 require (
 	github.com/brotherlogic/githubridge v0.2802.0
-	github.com/brotherlogic/mstore v0.0.0-20241024163511-232db34895b0
+	github.com/brotherlogic/goserver v0.0.0-20240826215223-fccbac46b3d4
+	github.com/brotherlogic/mstore v0.3.0
 	github.com/brotherlogic/rstore v0.59.0
 	github.com/prometheus/client_golang v1.20.5
 	google.golang.org/grpc v1.67.1
@@ -13,7 +14,9 @@ require (
 
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/brotherlogic/discovery v0.0.0-20241019174757-a28906468083 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
+	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/klauspost/compress v1.17.11 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
