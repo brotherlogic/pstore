@@ -26,7 +26,7 @@ metadata:
   name: pstore
   namespace: pstore
   labels:
-    team: monitorable
+    release: kube-prometheus-stack
 spec:
   endpoints:
     - port: metrics
