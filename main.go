@@ -7,6 +7,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"time"
 
 	ghbclient "github.com/brotherlogic/githubridge/client"
 	mstore_client "github.com/brotherlogic/mstore/client"
@@ -30,9 +31,16 @@ var (
 	wCount = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "pstore_wcount",
 	}, []string{"client", "code"})
+
 	rCount = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "pstore_rcount",
 	}, []string{"client", "code"})
+	rCountTime = promauto.NewHistogramVec(prometheus.HistogramOpts{
+		Name: "pstore_rcount_latency",
+	}, []string{"client"})
+	rCountDiffs = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "pstore_rcount_diffs",
+	})
 
 	cCount = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "pstore_ccount",
@@ -61,17 +69,34 @@ type pstore interface {
 func (s *Server) Read(ctx context.Context, req *pb.ReadRequest) (*pb.ReadResponse, error) {
 	var reads []*pb.ReadResponse
 	for _, c := range s.clients {
+		t := time.Now()
 		resp, err := c.Read(ctx, req)
 		rCount.With(prometheus.Labels{"client": c.Name(), "code": fmt.Sprintf("%v", err)}).Inc()
 
 		if err != nil {
 			log.Printf("Error on read: %v", err)
 		}
+
+		rCountTime.With(prometheus.Labels{"client": c.Name()}).Observe(float64(time.Since(t).Milliseconds()))
+
 		reads = append(reads, resp)
 	}
 
 	if len(reads) == 0 {
 		return nil, status.Errorf(codes.Internal, "Unable to process %v", req)
+	}
+
+	for _, val := range reads[1:] {
+		if len(val.GetValue().GetValue()) != len(reads[0].GetValue().GetValue()) {
+			rCountDiffs.Inc()
+		}
+
+		for i := range val.GetValue().GetValue() {
+			if val.GetValue().GetValue()[i] != reads[0].GetValue().GetValue()[i] {
+				rCountDiffs.Inc()
+				break
+			}
+		}
 	}
 
 	return reads[0], nil
