@@ -71,7 +71,7 @@ func (s *Server) Read(ctx context.Context, req *pb.ReadRequest) (*pb.ReadRespons
 	for _, c := range s.clients {
 		t := time.Now()
 		resp, err := c.Read(ctx, req)
-		rCount.With(prometheus.Labels{"client": c.Name(), "code": fmt.Sprintf("%v", err)}).Inc()
+		rCount.With(prometheus.Labels{"client": c.Name(), "code": fmt.Sprintf("%v", status.Code(err))}).Inc()
 
 		if err != nil {
 			log.Printf("Error on read: %v", err)
