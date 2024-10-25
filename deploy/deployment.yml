@@ -25,6 +25,8 @@ kind: ServiceMonitor
 metadata:
   name: pstore
   namespace: pstore
+  labels:
+    team: monitorable
 spec:
   endpoints:
     - port: metrics

@@ -21,9 +21,9 @@ func main() {
 
 	client := pbps.NewPStoreServiceClient(conn)
 
-	result, err := client.Read(ctx, &pbps.ReadRequest{Key: "sync/testing"})
+	result, err := client.Read(ctx, &pbps.ReadRequest{Key: "sync/test"})
 	if err != nil {
 		log.Printf("Error: %v", err)
 	}
-	log.Printf("%v", result)
+	log.Printf("Result: %v", result)
 }
