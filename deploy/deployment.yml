@@ -56,7 +56,7 @@ spec:
     spec:
       containers:
         - name: pstore
-          image: registry.brotherlogic-backend.com/brotherlogic/pstore:0.12.0 # {"$imagepolicy": "flux-system:pstore"}
+          image: registry.brotherlogic-backend.com/brotherlogic/pstore:0.13.0 # {"$imagepolicy": "flux-system:pstore"}
           ports:
             - containerPort: 8080
       imagePullSecrets:
