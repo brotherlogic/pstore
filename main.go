@@ -28,18 +28,18 @@ var (
 
 var (
 	wCount = promauto.NewCounterVec(prometheus.CounterOpts{
-		Name: "rstore_wcount",
+		Name: "pstore_wcount",
 	}, []string{"client", "code"})
 	rCount = promauto.NewCounterVec(prometheus.CounterOpts{
-		Name: "rstore_rcount",
+		Name: "pstore_rcount",
 	}, []string{"client", "code"})
 
 	cCount = promauto.NewCounterVec(prometheus.CounterOpts{
-		Name: "rstore_ccount",
+		Name: "pstore_ccount",
 	}, []string{"client", "code"})
 
 	cCountDiffs = promauto.NewCounter(prometheus.CounterOpts{
-		Name: "rstore_ccount_diffs",
+		Name: "pstore_ccount_diffs",
 	})
 )
 
