@@ -45,6 +45,16 @@ var (
 		Name: "pstore_rcount_diffs",
 	})
 
+	gkCount = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "pstore_gkcount",
+	}, []string{"client", "code"})
+	gkCountTime = promauto.NewHistogramVec(prometheus.HistogramOpts{
+		Name: "pstore_gkcount_latency",
+	}, []string{"client"})
+	gkCountDiffs = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "pstore_gkcount_diffs",
+	})
+
 	cCount = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "pstore_ccount",
 	}, []string{"client", "code"})
@@ -128,15 +138,33 @@ func (s *Server) Write(ctx context.Context, req *pb.WriteRequest) (*pb.WriteResp
 func (s *Server) GetKeys(ctx context.Context, req *pb.GetKeysRequest) (*pb.GetKeysResponse, error) {
 	var keys []*pb.GetKeysResponse
 	for _, c := range s.clients {
+		t := time.Now()
 		resp, err := c.GetKeys(ctx, req)
+		gkCount.With(prometheus.Labels{"client": c.Name(), "code": fmt.Sprintf("%v", status.Code(err))}).Inc()
+
 		if err != nil {
 			log.Printf("Error on read: %v", err)
+		} else {
+			keys = append(keys, resp)
+			gkCountTime.With(prometheus.Labels{"client": c.Name()}).Observe(float64(time.Since(t).Milliseconds()))
 		}
-		keys = append(keys, resp)
 	}
 
 	if len(keys) == 0 {
 		return nil, status.Errorf(codes.Internal, "Unable to process %v", req)
+	}
+
+	for _, val := range keys[1:] {
+		if len(val.GetKeys()) != len(keys[0].GetKeys()) {
+			rCountDiffs.Inc()
+		}
+
+		for i := range val.GetKeys() {
+			if val.GetKeys()[i] != keys[0].GetKeys()[i] {
+				gkCountDiffs.Inc()
+				break
+			}
+		}
 	}
 
 	return keys[0], nil
