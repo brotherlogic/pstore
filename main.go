@@ -31,6 +31,9 @@ var (
 	wCount = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "pstore_wcount",
 	}, []string{"client", "code"})
+	wCountTime = promauto.NewHistogramVec(prometheus.HistogramOpts{
+		Name: "pstore_wcount_latency",
+	}, []string{"client"})
 
 	rCount = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "pstore_rcount",
@@ -104,12 +107,15 @@ func (s *Server) Read(ctx context.Context, req *pb.ReadRequest) (*pb.ReadRespons
 func (s *Server) Write(ctx context.Context, req *pb.WriteRequest) (*pb.WriteResponse, error) {
 	var writes []*pb.WriteResponse
 	for _, c := range s.clients {
+		t := time.Now()
 		resp, err := c.Write(ctx, req)
 		wCount.With(prometheus.Labels{"client": c.Name(), "code": fmt.Sprintf("%v", status.Code(err))}).Inc()
 		if err != nil {
-			log.Printf("Error on read: %v", err)
+			log.Printf("Error on write: %v", err)
+		} else {
+			wCountTime.With(prometheus.Labels{"client": c.Name()}).Observe(float64(time.Since(t).Milliseconds()))
+			writes = append(writes, resp)
 		}
-		writes = append(writes, resp)
 	}
 
 	if len(writes) == 0 {
