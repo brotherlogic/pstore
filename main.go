@@ -36,7 +36,7 @@ var (
 	}, []string{"client"})
 
 	dCount = promauto.NewCounterVec(prometheus.CounterOpts{
-		Name: "pstore_wdount",
+		Name: "pstore_dcount",
 	}, []string{"client", "code"})
 	dCountTime = promauto.NewHistogramVec(prometheus.HistogramOpts{
 		Name: "pstore_dcount_latency",
