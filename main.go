@@ -35,6 +35,13 @@ var (
 		Name: "pstore_wcount_latency",
 	}, []string{"client"})
 
+	dCount = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "pstore_wdount",
+	}, []string{"client", "code"})
+	dCountTime = promauto.NewHistogramVec(prometheus.HistogramOpts{
+		Name: "pstore_dcount_latency",
+	}, []string{"client"})
+
 	rCount = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "pstore_rcount",
 	}, []string{"client", "code"})
@@ -58,7 +65,9 @@ var (
 	cCount = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "pstore_ccount",
 	}, []string{"client", "code"})
-
+	cCountTime = promauto.NewHistogramVec(prometheus.HistogramOpts{
+		Name: "pstore_ccount_latency",
+	}, []string{"client"})
 	cCountDiffs = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "pstore_ccount_diffs",
 	})
@@ -173,11 +182,16 @@ func (s *Server) GetKeys(ctx context.Context, req *pb.GetKeysRequest) (*pb.GetKe
 func (s *Server) Delete(ctx context.Context, req *pb.DeleteRequest) (*pb.DeleteResponse, error) {
 	var deletes []*pb.DeleteResponse
 	for _, c := range s.clients {
+		t := time.Now()
 		resp, err := c.Delete(ctx, req)
+		dCount.With(prometheus.Labels{"client": c.Name(), "code": fmt.Sprintf("%v", status.Code(err))}).Inc()
+
 		if err != nil {
 			log.Printf("Error on read: %v", err)
+		} else {
+			dCountTime.With(prometheus.Labels{"client": c.Name()}).Observe(float64(time.Since(t).Milliseconds()))
+			deletes = append(deletes, resp)
 		}
-		deletes = append(deletes, resp)
 	}
 
 	if len(deletes) == 0 {
@@ -190,12 +204,15 @@ func (s *Server) Delete(ctx context.Context, req *pb.DeleteRequest) (*pb.DeleteR
 func (s *Server) Count(ctx context.Context, req *pb.CountRequest) (*pb.CountResponse, error) {
 	var counts []*pb.CountResponse
 	for _, c := range s.clients {
+		t := time.Now()
 		resp, err := c.Count(ctx, req)
 		cCount.With(prometheus.Labels{"client": c.Name(), "code": fmt.Sprintf("%v", status.Code(err))}).Inc()
 		if err != nil {
 			log.Printf("Error on read: %v", err)
+		} else {
+			cCountTime.With(prometheus.Labels{"client": c.Name()}).Observe(float64(time.Since(t).Milliseconds()))
+			counts = append(counts, resp)
 		}
-		counts = append(counts, resp)
 	}
 
 	if len(counts) == 0 {
@@ -203,7 +220,7 @@ func (s *Server) Count(ctx context.Context, req *pb.CountRequest) (*pb.CountResp
 	}
 
 	val := counts[0].GetCount()
-	for _, c := range counts {
+	for _, c := range counts[1:] {
 		if c.GetCount() != val {
 			cCountDiffs.Inc()
 		}
