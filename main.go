@@ -90,6 +90,7 @@ type pstore interface {
 
 func (s *Server) Read(ctx context.Context, req *pb.ReadRequest) (*pb.ReadResponse, error) {
 	var reads []*pb.ReadResponse
+	var errors []error
 	for _, c := range s.clients {
 		t := time.Now()
 		resp, err := c.Read(ctx, req)
@@ -99,28 +100,28 @@ func (s *Server) Read(ctx context.Context, req *pb.ReadRequest) (*pb.ReadRespons
 			log.Printf("Error on read: %v", err)
 		} else {
 			rCountTime.With(prometheus.Labels{"client": c.Name()}).Observe(float64(time.Since(t).Milliseconds()))
-			reads = append(reads, resp)
-		}
-	}
-
-	if len(reads) == 0 {
-		return nil, status.Errorf(codes.Internal, "Unable to process %v", req)
-	}
-
-	for _, val := range reads[1:] {
-		if len(val.GetValue().GetValue()) != len(reads[0].GetValue().GetValue()) {
-			rCountDiffs.Inc()
 		}
 
-		for i := range val.GetValue().GetValue() {
-			if val.GetValue().GetValue()[i] != reads[0].GetValue().GetValue()[i] {
+		reads = append(reads, resp)
+		errors = append(errors, err)
+	}
+
+	for i, val := range reads[1:] {
+		if errors[i+1] == nil {
+			if len(val.GetValue().GetValue()) != len(reads[0].GetValue().GetValue()) {
 				rCountDiffs.Inc()
-				break
+			}
+
+			for i := range val.GetValue().GetValue() {
+				if val.GetValue().GetValue()[i] != reads[0].GetValue().GetValue()[i] {
+					rCountDiffs.Inc()
+					break
+				}
 			}
 		}
 	}
 
-	return reads[0], nil
+	return reads[0], errors[0]
 }
 
 func (s *Server) Write(ctx context.Context, req *pb.WriteRequest) (*pb.WriteResponse, error) {
