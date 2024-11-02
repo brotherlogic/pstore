@@ -126,6 +126,7 @@ func (s *Server) Read(ctx context.Context, req *pb.ReadRequest) (*pb.ReadRespons
 
 func (s *Server) Write(ctx context.Context, req *pb.WriteRequest) (*pb.WriteResponse, error) {
 	var writes []*pb.WriteResponse
+	var errors []error
 	for _, c := range s.clients {
 		t := time.Now()
 		resp, err := c.Write(ctx, req)
@@ -134,15 +135,16 @@ func (s *Server) Write(ctx context.Context, req *pb.WriteRequest) (*pb.WriteResp
 			log.Printf("Error on write: %v", err)
 		} else {
 			wCountTime.With(prometheus.Labels{"client": c.Name()}).Observe(float64(time.Since(t).Milliseconds()))
-			writes = append(writes, resp)
 		}
+		writes = append(writes, resp)
+		errors = append(errors, err)
 	}
 
 	if len(writes) == 0 {
 		return nil, status.Errorf(codes.Internal, "Unable to process %v", req)
 	}
 
-	return writes[0], nil
+	return writes[0], errors[0]
 }
 
 func (s *Server) GetKeys(ctx context.Context, req *pb.GetKeysRequest) (*pb.GetKeysResponse, error) {
