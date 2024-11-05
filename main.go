@@ -110,11 +110,14 @@ func (s *Server) Read(ctx context.Context, req *pb.ReadRequest) (*pb.ReadRespons
 		if errors[i+1] == nil {
 			if len(val.GetValue().GetValue()) != len(reads[0].GetValue().GetValue()) {
 				rCountDiffs.Inc()
+				log.Printf("Diff: %v", string(val.GetValue().GetValue()), string(reads[0].GetValue().GetValue()))
+				break
 			}
 
 			for i := range val.GetValue().GetValue() {
 				if val.GetValue().GetValue()[i] != reads[0].GetValue().GetValue()[i] {
 					rCountDiffs.Inc()
+					log.Printf("Diff: %v", string(val.GetValue().GetValue()), string(reads[0].GetValue().GetValue()))
 					break
 				}
 			}
