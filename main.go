@@ -156,6 +156,7 @@ func (s *Server) Write(ctx context.Context, req *pb.WriteRequest) (*pb.WriteResp
 		if err != nil {
 			log.Printf("Error on write: %v", err)
 		} else {
+			log.Printf("Written in %v", time.Since(t))
 			wCountTime.With(prometheus.Labels{"client": c.Name()}).Observe(float64(time.Since(t).Milliseconds()))
 		}
 		writes = append(writes, resp)
