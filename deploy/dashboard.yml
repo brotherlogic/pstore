@@ -1260,7 +1260,7 @@ data:
       },
       "timepicker": {},
       "timezone": "",
-      "title": "PStore",
+      "title": "ProtoStore",
       "uid": "ddef7117-b693-4900-83ac-06bff2cb7001",
       "version": 3,
       "weekStart": ""
