@@ -42,6 +42,9 @@ var (
 	dCountTime = promauto.NewHistogramVec(prometheus.HistogramOpts{
 		Name: "pstore_dcount_latency",
 	}, []string{"client"})
+	dCountDiffs = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "pstore_delete_diffs",
+	})
 
 	rCount = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "pstore_rcount",
@@ -231,6 +234,10 @@ func (s *Server) Delete(ctx context.Context, req *pb.DeleteRequest) (*pb.DeleteR
 
 	if len(deletes) == 0 {
 		return nil, status.Errorf(codes.Internal, "Unable to process %v", req)
+	}
+
+	if len(errors) > 0 && errors[0] != errors[1] {
+		dCountDiffs.Inc()
 	}
 
 	i := s.split(ctx, len(deletes))
