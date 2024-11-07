@@ -195,7 +195,7 @@ func (s *Server) GetKeys(ctx context.Context, req *pb.GetKeysRequest) (*pb.GetKe
 	for i, val := range keys[1:] {
 		if errors[i+1] == nil {
 			if len(val.GetKeys()) != len(keys[0].GetKeys()) {
-				rCountDiffs.Inc()
+				gkCountDiffs.Inc()
 			}
 
 			for i := range val.GetKeys() {
@@ -204,6 +204,8 @@ func (s *Server) GetKeys(ctx context.Context, req *pb.GetKeysRequest) (*pb.GetKe
 					break
 				}
 			}
+		} else if errors[i+1] != errors[0] {
+			gkCountDiffs.Inc()
 		}
 	}
 	i := s.split(ctx, len(keys))
