@@ -11,7 +11,6 @@ import (
 	"time"
 
 	ghbclient "github.com/brotherlogic/githubridge/client"
-	mstore_client "github.com/brotherlogic/mstore/client"
 	pb "github.com/brotherlogic/pstore/proto"
 	rstore_client "github.com/brotherlogic/rstore/client"
 
@@ -286,11 +285,11 @@ func main() {
 	}
 	s.clients = append(s.clients, &rstore_wrapper{rc: rsc})
 
-	msc, err := mstore_client.GetClient()
+	/*msc, err := mstore_client.GetClient()
 	if err != nil {
 		log.Fatalf("Unable to get mstore client")
 	}
-	s.clients = append(s.clients, &mstore_wrapper{mc: msc})
+	s.clients = append(s.clients, &mstore_wrapper{mc: msc})*/
 
 	client, err := ghbclient.GetClientInternal()
 	if err != nil {
