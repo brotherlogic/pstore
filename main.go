@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math/rand"
 	"net"
 	"net/http"
 	"time"
@@ -41,6 +42,9 @@ var (
 	dCountTime = promauto.NewHistogramVec(prometheus.HistogramOpts{
 		Name: "pstore_dcount_latency",
 	}, []string{"client"})
+	dCountDiffs = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "pstore_delete_diffs",
+	})
 
 	rCount = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "pstore_rcount",
@@ -71,6 +75,10 @@ var (
 	cCountDiffs = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "pstore_ccount_diffs",
 	})
+
+	cSplit = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "pstore_split",
+	})
 )
 
 type Server struct {
@@ -86,6 +94,20 @@ type pstore interface {
 	Delete(ctx context.Context, req *pb.DeleteRequest) (*pb.DeleteResponse, error)
 	Count(ctx context.Context, req *pb.CountRequest) (*pb.CountResponse, error)
 	Name() string
+}
+
+func (s *Server) split(ctx context.Context, arlen int) int {
+	splitVal := float64(0.0)
+	cSplit.Set(splitVal)
+
+	if arlen == 0 {
+		return 0
+	}
+
+	if rand.Float64() > splitVal {
+		return 0
+	}
+	return 1
 }
 
 func (s *Server) Read(ctx context.Context, req *pb.ReadRequest) (*pb.ReadResponse, error) {
@@ -136,6 +158,7 @@ func (s *Server) Write(ctx context.Context, req *pb.WriteRequest) (*pb.WriteResp
 		if err != nil {
 			log.Printf("Error on write: %v", err)
 		} else {
+			log.Printf("Written in %v (%v)", time.Since(t), c.Name())
 			wCountTime.With(prometheus.Labels{"client": c.Name()}).Observe(float64(time.Since(t).Milliseconds()))
 		}
 		writes = append(writes, resp)
@@ -146,11 +169,13 @@ func (s *Server) Write(ctx context.Context, req *pb.WriteRequest) (*pb.WriteResp
 		return nil, status.Errorf(codes.Internal, "Unable to process %v", req)
 	}
 
-	return writes[0], errors[0]
+	i := s.split(ctx, len(writes))
+	return writes[i], errors[i]
 }
 
 func (s *Server) GetKeys(ctx context.Context, req *pb.GetKeysRequest) (*pb.GetKeysResponse, error) {
 	var keys []*pb.GetKeysResponse
+	var errors []error
 	for _, c := range s.clients {
 		t := time.Now()
 		resp, err := c.GetKeys(ctx, req)
@@ -159,33 +184,39 @@ func (s *Server) GetKeys(ctx context.Context, req *pb.GetKeysRequest) (*pb.GetKe
 		if err != nil {
 			log.Printf("Error on read: %v", err)
 		} else {
-			keys = append(keys, resp)
 			gkCountTime.With(prometheus.Labels{"client": c.Name()}).Observe(float64(time.Since(t).Milliseconds()))
 		}
+		keys = append(keys, resp)
+		errors = append(errors, err)
 	}
 
 	if len(keys) == 0 {
 		return nil, status.Errorf(codes.Internal, "Unable to process %v", req)
 	}
 
-	for _, val := range keys[1:] {
-		if len(val.GetKeys()) != len(keys[0].GetKeys()) {
-			rCountDiffs.Inc()
-		}
-
-		for i := range val.GetKeys() {
-			if val.GetKeys()[i] != keys[0].GetKeys()[i] {
+	for i, val := range keys[1:] {
+		if errors[i+1] == nil {
+			if len(val.GetKeys()) != len(keys[0].GetKeys()) {
 				gkCountDiffs.Inc()
-				break
 			}
+
+			for i := range val.GetKeys() {
+				if val.GetKeys()[i] != keys[0].GetKeys()[i] {
+					gkCountDiffs.Inc()
+					break
+				}
+			}
+		} else if errors[i+1] != errors[0] {
+			gkCountDiffs.Inc()
 		}
 	}
-
-	return keys[0], nil
+	i := s.split(ctx, len(keys))
+	return keys[i], errors[i]
 }
 
 func (s *Server) Delete(ctx context.Context, req *pb.DeleteRequest) (*pb.DeleteResponse, error) {
 	var deletes []*pb.DeleteResponse
+	var errors []error
 	for _, c := range s.clients {
 		t := time.Now()
 		resp, err := c.Delete(ctx, req)
@@ -195,19 +226,26 @@ func (s *Server) Delete(ctx context.Context, req *pb.DeleteRequest) (*pb.DeleteR
 			log.Printf("Error on read: %v", err)
 		} else {
 			dCountTime.With(prometheus.Labels{"client": c.Name()}).Observe(float64(time.Since(t).Milliseconds()))
-			deletes = append(deletes, resp)
 		}
+		deletes = append(deletes, resp)
+		errors = append(errors, err)
 	}
 
 	if len(deletes) == 0 {
 		return nil, status.Errorf(codes.Internal, "Unable to process %v", req)
 	}
 
-	return deletes[0], nil
+	if len(errors) > 0 && errors[0] != errors[1] {
+		dCountDiffs.Inc()
+	}
+
+	i := s.split(ctx, len(deletes))
+	return deletes[i], errors[i]
 }
 
 func (s *Server) Count(ctx context.Context, req *pb.CountRequest) (*pb.CountResponse, error) {
 	var counts []*pb.CountResponse
+	var errors []error
 	for _, c := range s.clients {
 		t := time.Now()
 		resp, err := c.Count(ctx, req)
@@ -216,8 +254,9 @@ func (s *Server) Count(ctx context.Context, req *pb.CountRequest) (*pb.CountResp
 			log.Printf("Error on read: %v", err)
 		} else {
 			cCountTime.With(prometheus.Labels{"client": c.Name()}).Observe(float64(time.Since(t).Milliseconds()))
-			counts = append(counts, resp)
 		}
+		counts = append(counts, resp)
+		errors = append(errors, err)
 	}
 
 	if len(counts) == 0 {
@@ -225,13 +264,14 @@ func (s *Server) Count(ctx context.Context, req *pb.CountRequest) (*pb.CountResp
 	}
 
 	val := counts[0].GetCount()
-	for _, c := range counts[1:] {
-		if c.GetCount() != val {
+	for i, c := range counts[1:] {
+		if c.GetCount() != val && errors[i+1] == nil {
 			cCountDiffs.Inc()
 		}
 	}
 
-	return counts[0], nil
+	i := s.split(ctx, len(counts))
+	return counts[i], errors[i]
 }
 
 func main() {
