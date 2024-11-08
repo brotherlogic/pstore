@@ -234,7 +234,7 @@ func (s *Server) Delete(ctx context.Context, req *pb.DeleteRequest) (*pb.DeleteR
 		return nil, status.Errorf(codes.Internal, "Unable to process %v", req)
 	}
 
-	if len(errors) > 0 && errors[0] != errors[1] {
+	if len(errors) > 1 && errors[0] != errors[1] {
 		dCountDiffs.Inc()
 	}
 
