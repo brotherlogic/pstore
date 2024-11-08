@@ -182,7 +182,7 @@ func (s *Server) GetKeys(ctx context.Context, req *pb.GetKeysRequest) (*pb.GetKe
 		gkCount.With(prometheus.Labels{"client": c.Name(), "code": fmt.Sprintf("%v", status.Code(err))}).Inc()
 
 		if err != nil {
-			log.Printf("Error on read: %v", err)
+			log.Printf("Error on getkyes: %v (%v)", err, c.Name())
 		} else {
 			gkCountTime.With(prometheus.Labels{"client": c.Name()}).Observe(float64(time.Since(t).Milliseconds()))
 		}
@@ -223,7 +223,7 @@ func (s *Server) Delete(ctx context.Context, req *pb.DeleteRequest) (*pb.DeleteR
 		dCount.With(prometheus.Labels{"client": c.Name(), "code": fmt.Sprintf("%v", status.Code(err))}).Inc()
 
 		if err != nil {
-			log.Printf("Error on read: %v", err)
+			log.Printf("Error on delete: %v (%v)", err, c.Name())
 		} else {
 			dCountTime.With(prometheus.Labels{"client": c.Name()}).Observe(float64(time.Since(t).Milliseconds()))
 		}
@@ -251,7 +251,7 @@ func (s *Server) Count(ctx context.Context, req *pb.CountRequest) (*pb.CountResp
 		resp, err := c.Count(ctx, req)
 		cCount.With(prometheus.Labels{"client": c.Name(), "code": fmt.Sprintf("%v", status.Code(err))}).Inc()
 		if err != nil {
-			log.Printf("Error on read: %v", err)
+			log.Printf("Error on count: %v (%v)", err, c.Name())
 		} else {
 			cCountTime.With(prometheus.Labels{"client": c.Name()}).Observe(float64(time.Since(t).Milliseconds()))
 		}
