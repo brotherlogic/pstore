@@ -119,7 +119,7 @@ func (s *Server) Read(ctx context.Context, req *pb.ReadRequest) (*pb.ReadRespons
 		rCount.With(prometheus.Labels{"client": c.Name(), "code": fmt.Sprintf("%v", status.Code(err))}).Inc()
 
 		if err != nil {
-			log.Printf("Error on read: %v (%v)", err, c.Name())
+			log.Printf("Error on read: %v (%v) %v", err, c.Name(), time.Since(t))
 		} else {
 			log.Printf("Read took %v (%v)", time.Since(t), c.Name())
 			rCountTime.With(prometheus.Labels{"client": c.Name()}).Observe(float64(time.Since(t).Milliseconds()))
