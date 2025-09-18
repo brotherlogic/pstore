@@ -14,7 +14,7 @@ func getPGStore() (*pgstore_wrapper, error) {
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(100*1024*1024)))
 	if err != nil {
-		return nil, fmt.Errorf("dial error on %v -> %w", "rstore.rstore:8080", err)
+		return nil, fmt.Errorf("dial error on %v -> %w", "pstore.pstore:8080", err)
 	}
 	return &pgstore_wrapper{client: pb.NewPStoreServiceClient(conn)}, nil
 }
