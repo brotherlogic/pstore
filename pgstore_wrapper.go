@@ -10,7 +10,7 @@ import (
 )
 
 func getPGStore() (*pgstore_wrapper, error) {
-	conn, err := grpc.Dial("rstore.rstore:8080",
+	conn, err := grpc.Dial("pstore.pstore:8080",
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(100*1024*1024)))
 	if err != nil {
