@@ -164,13 +164,29 @@ func (s *Server) runWrite(ctx context.Context, client pstore, req *pb.WriteReque
 
 func (s *Server) Write(ctx context.Context, req *pb.WriteRequest) (*pb.WriteResponse, error) {
 	mresp, err := s.runWrite(ctx, s.clients[0], req)
+	deadline, ok := ctx.Deadline()
+	timeout := time.Minute
+	if ok {
+		timeout = time.Until(deadline)
+	}
+	oCtx, cancel := context.WithTimeout(context.Background(), timeout)
+	waitgroup := &sync.WaitGroup{}
+
 	if err == nil {
 		for _, c := range s.clients[1:] {
+			waitgroup.Add(1)
 			go func() {
-				s.runWrite(ctx, c, req)
+				s.runWrite(oCtx, c, req)
+				waitgroup.Done()
 			}()
 		}
 	}
+
+	go func() {
+		waitgroup.Wait()
+		cancel()
+	}()
+
 	return mresp, err
 }
 
