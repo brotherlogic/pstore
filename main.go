@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"net"
 	"net/http"
+	"sync"
 	"time"
 
 	ghbclient "github.com/brotherlogic/githubridge/client"
@@ -121,18 +122,32 @@ func (s *Server) runRead(ctx context.Context, client pstore, req *pb.ReadRequest
 func (s *Server) Read(ctx context.Context, req *pb.ReadRequest) (*pb.ReadResponse, error) {
 	mResp, err := s.runRead(ctx, s.clients[0], req)
 
+	deadline, ok := ctx.Deadline()
+	timeout := time.Minute
+	if ok {
+		timeout = time.Until(deadline)
+	}
+	oCtx, cancel := context.WithTimeout(context.Background(), timeout)
+	waitgroup := &sync.WaitGroup{}
 	if err == nil {
 		for _, c := range s.clients[1:] {
+			waitgroup.Add(1)
 			go func() {
-				resp, err := s.runRead(ctx, c, req)
+				resp, err := s.runRead(oCtx, c, req)
 				if err == nil {
 					if len(resp.GetValue().GetValue()) != len(mResp.GetValue().GetValue()) {
 						rCountDiffs.Inc()
 					}
 				}
+				waitgroup.Done()
 			}()
 		}
 	}
+
+	go func() {
+		waitgroup.Wait()
+		cancel()
+	}()
 
 	return mResp, err
 }
