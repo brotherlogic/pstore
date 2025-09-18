@@ -247,6 +247,11 @@ func main() {
 	}
 	s.clients = append(s.clients, &rstore_wrapper{rc: rsc})
 
+	pgc, err := getPGStore()
+	if err != nil {
+		log.Fatalf("Cannot dial pgstore client")
+	}
+	s.clients = append(s.clients, pgc)
 	/*msc, err := mstore_client.GetClient()
 	if err != nil {
 		log.Fatalf("Unable to get mstore client")
