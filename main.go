@@ -32,14 +32,16 @@ var (
 		Name: "pstore_wcount",
 	}, []string{"client", "code"})
 	wCountTime = promauto.NewHistogramVec(prometheus.HistogramOpts{
-		Name: "pstore_wcount_latency",
+		Name:    "pstore_wcount_latency",
+		Buckets: []float64{0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 20, 50, 100, 500, 1000}, // Custom bucket upper bounds
 	}, []string{"client"})
 
 	dCount = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "pstore_dcount",
 	}, []string{"client", "code"})
 	dCountTime = promauto.NewHistogramVec(prometheus.HistogramOpts{
-		Name: "pstore_dcount_latency",
+		Name:    "pstore_dcount_latency",
+		Buckets: []float64{0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 20, 50, 100, 500, 1000}, // Custom
 	}, []string{"client"})
 	dCountDiffs = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "pstore_delete_diffs",
@@ -49,7 +51,8 @@ var (
 		Name: "pstore_rcount",
 	}, []string{"client", "code"})
 	rCountTime = promauto.NewHistogramVec(prometheus.HistogramOpts{
-		Name: "pstore_rcount_latency",
+		Name:    "pstore_rcount_latency",
+		Buckets: []float64{0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 20, 50, 100, 500, 1000}, // Custom
 	}, []string{"client"})
 	rCountDiffs = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "pstore_rcount_diffs",
@@ -59,7 +62,8 @@ var (
 		Name: "pstore_gkcount",
 	}, []string{"client", "code"})
 	gkCountTime = promauto.NewHistogramVec(prometheus.HistogramOpts{
-		Name: "pstore_gkcount_latency",
+		Name:    "pstore_gkcount_latency",
+		Buckets: []float64{0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 20, 50, 100, 500, 1000}, // Custom
 	}, []string{"client"})
 	gkCountDiffs = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "pstore_gkcount_diffs",
@@ -69,7 +73,8 @@ var (
 		Name: "pstore_ccount",
 	}, []string{"client", "code"})
 	cCountTime = promauto.NewHistogramVec(prometheus.HistogramOpts{
-		Name: "pstore_ccount_latency",
+		Name:    "pstore_ccount_latency",
+		Buckets: []float64{0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 20, 50, 100, 500, 1000}, // Custom
 	}, []string{"client"})
 	cCountDiffs = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "pstore_ccount_diffs",
