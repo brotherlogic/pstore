@@ -136,6 +136,7 @@ func (s *Server) Read(ctx context.Context, req *pb.ReadRequest) (*pb.ReadRespons
 				resp, err := s.runRead(oCtx, c, req)
 				if err == nil {
 					if len(resp.GetValue().GetValue()) != len(mResp.GetValue().GetValue()) {
+						log.Printf("READ: %v vs %v", resp.GetValue().GetValue(), mResp.GetValue().GetValue())
 						rCountDiffs.Inc()
 					}
 				}
