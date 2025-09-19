@@ -311,7 +311,7 @@ func main() {
 	}
 	size := 1024 * 1024 * 1500
 	gs := grpc.NewServer(
-		grpc.MaxSendMsgSize(size),
+		//grpc.MaxSendMsgSize(size),
 		grpc.MaxRecvMsgSize(size),
 	)
 	pb.RegisterPStoreServiceServer(gs, s)
