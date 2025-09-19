@@ -21,9 +21,12 @@ func main() {
 
 	client := pbps.NewPStoreServiceClient(conn)
 
-	result, err := client.Read(ctx, &pbps.ReadRequest{Key: "sync/test"})
+	result, err := client.GetKeys(ctx, &pbps.GetKeysRequest{AllKeys: true})
 	if err != nil {
 		log.Printf("Error: %v", err)
 	}
-	log.Printf("Result: %v", result)
+	log.Printf("Found %v keys", len(result.GetKeys()))
+	/*for _, key := range result.GetKeys() {
+		log.Printf("Key: %v", key)
+	}*/
 }
