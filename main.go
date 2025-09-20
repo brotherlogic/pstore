@@ -63,7 +63,7 @@ var (
 	}, []string{"client", "code"})
 	gkCountTime = promauto.NewHistogramVec(prometheus.HistogramOpts{
 		Name:    "pstore_gkcount_latency",
-		Buckets: []float64{0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 20, 50, 100, 500, 1000, 2000, 5000, 10000}, // Custom
+		Buckets: []float64{0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 20, 50, 100, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000}, // Custom
 	}, []string{"client"})
 	gkCountDiffs = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "pstore_gkcount_diffs",
