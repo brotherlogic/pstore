@@ -211,23 +211,43 @@ func (s *Server) runGetKeys(ctx context.Context, client pstore, req *pb.GetKeysR
 }
 
 func (s *Server) GetKeys(ctx context.Context, req *pb.GetKeysRequest) (*pb.GetKeysResponse, error) {
+	deadline, ok := ctx.Deadline()
+	timeout := time.Minute
+	if ok {
+		timeout = time.Until(deadline)
+	}
+	oCtx, cancel := context.WithTimeout(context.Background(), timeout)
+	waitgroup := &sync.WaitGroup{}
 	t := time.Now()
 	defer func() {
 		log.Printf("Read GetKeys in %v", time.Since(t))
 	}()
+
 	mresp, err := s.runGetKeys(ctx, s.clients[0], req)
+
 	if err == nil {
 		for _, c := range s.clients[1:] {
+			waitgroup.Add(1)
 			go func() {
-				resp, err := s.runGetKeys(ctx, c, req)
+				resp, err := s.runGetKeys(oCtx, c, req)
 				if err == nil {
 					if len(resp.GetKeys()) != len(mresp.GetKeys()) {
 						gkCountDiffs.Inc()
 					}
 				}
+				if err != nil {
+					log.Printf("GetKeys err: %v", err)
+				}
+				waitgroup.Done()
 			}()
 		}
 	}
+
+	go func() {
+		waitgroup.Wait()
+		cancel()
+	}()
+
 	return mresp, err
 }
 
