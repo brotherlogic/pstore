@@ -173,7 +173,7 @@ func (s *Server) runWrite(ctx context.Context, client pstore, req *pb.WriteReque
 }
 
 func (s *Server) Write(ctx context.Context, req *pb.WriteRequest) (*pb.WriteResponse, error) {
-	mresp, err := s.runWrite(ctx, s.clients[0], req)
+	t := time.Now()
 	deadline, ok := ctx.Deadline()
 	timeout := time.Minute
 	if ok {
@@ -181,6 +181,8 @@ func (s *Server) Write(ctx context.Context, req *pb.WriteRequest) (*pb.WriteResp
 	}
 	oCtx, cancel := context.WithTimeout(context.Background(), timeout)
 	waitgroup := &sync.WaitGroup{}
+
+	mresp, err := s.runWrite(ctx, s.clients[0], req)
 
 	if err == nil {
 		for _, c := range s.clients[1:] {
@@ -194,7 +196,7 @@ func (s *Server) Write(ctx context.Context, req *pb.WriteRequest) (*pb.WriteResp
 
 	go func() {
 		waitgroup.Wait()
-		log.Printf("Cancelling context")
+		log.Printf("Cancelling context after %v", time.Since(t))
 		cancel()
 	}()
 
