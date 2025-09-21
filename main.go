@@ -194,6 +194,7 @@ func (s *Server) Write(ctx context.Context, req *pb.WriteRequest) (*pb.WriteResp
 
 	go func() {
 		waitgroup.Wait()
+		log.Printf("Cancelling context")
 		cancel()
 	}()
 
