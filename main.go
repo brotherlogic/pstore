@@ -32,14 +32,16 @@ var (
 		Name: "pstore_wcount",
 	}, []string{"client", "code"})
 	wCountTime = promauto.NewHistogramVec(prometheus.HistogramOpts{
-		Name: "pstore_wcount_latency",
+		Name:    "pstore_wcount_latency",
+		Buckets: []float64{0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 20, 50, 100, 500, 1000}, // Custom bucket upper bounds
 	}, []string{"client"})
 
 	dCount = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "pstore_dcount",
 	}, []string{"client", "code"})
 	dCountTime = promauto.NewHistogramVec(prometheus.HistogramOpts{
-		Name: "pstore_dcount_latency",
+		Name:    "pstore_dcount_latency",
+		Buckets: []float64{0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 20, 50, 100, 500, 1000}, // Custom
 	}, []string{"client"})
 	dCountDiffs = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "pstore_delete_diffs",
@@ -49,7 +51,8 @@ var (
 		Name: "pstore_rcount",
 	}, []string{"client", "code"})
 	rCountTime = promauto.NewHistogramVec(prometheus.HistogramOpts{
-		Name: "pstore_rcount_latency",
+		Name:    "pstore_rcount_latency",
+		Buckets: []float64{0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 20, 50, 100, 500, 1000}, // Custom
 	}, []string{"client"})
 	rCountDiffs = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "pstore_rcount_diffs",
@@ -59,7 +62,8 @@ var (
 		Name: "pstore_gkcount",
 	}, []string{"client", "code"})
 	gkCountTime = promauto.NewHistogramVec(prometheus.HistogramOpts{
-		Name: "pstore_gkcount_latency",
+		Name:    "pstore_gkcount_latency",
+		Buckets: []float64{0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 20, 50, 100, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000}, // Custom
 	}, []string{"client"})
 	gkCountDiffs = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "pstore_gkcount_diffs",
@@ -69,7 +73,8 @@ var (
 		Name: "pstore_ccount",
 	}, []string{"client", "code"})
 	cCountTime = promauto.NewHistogramVec(prometheus.HistogramOpts{
-		Name: "pstore_ccount_latency",
+		Name:    "pstore_ccount_latency",
+		Buckets: []float64{0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 20, 50, 100, 500, 1000}, // Custom
 	}, []string{"client"})
 	cCountDiffs = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "pstore_ccount_diffs",
@@ -136,6 +141,9 @@ func (s *Server) Read(ctx context.Context, req *pb.ReadRequest) (*pb.ReadRespons
 				resp, err := s.runRead(oCtx, c, req)
 				if err == nil {
 					if len(resp.GetValue().GetValue()) != len(mResp.GetValue().GetValue()) {
+						log.Printf("READ: %v => %v", req.GetKey(), string(resp.GetValue().GetValue()))
+						log.Printf("MEAD: %v => %v", req.GetKey(), string(mResp.GetValue().GetValue()))
+
 						rCountDiffs.Inc()
 					}
 				}
@@ -158,6 +166,8 @@ func (s *Server) runWrite(ctx context.Context, client pstore, req *pb.WriteReque
 	wCount.With(prometheus.Labels{"client": client.Name(), "code": fmt.Sprintf("%v", status.Code(err))}).Inc()
 	if err == nil {
 		wCountTime.With(prometheus.Labels{"client": client.Name()}).Observe(float64(time.Since(t).Milliseconds()))
+	} else {
+		log.Printf("Write Fail: %v -> %v", req.GetKey(), err)
 	}
 	return resp, err
 }
@@ -202,19 +212,43 @@ func (s *Server) runGetKeys(ctx context.Context, client pstore, req *pb.GetKeysR
 }
 
 func (s *Server) GetKeys(ctx context.Context, req *pb.GetKeysRequest) (*pb.GetKeysResponse, error) {
+	deadline, ok := ctx.Deadline()
+	timeout := time.Minute
+	if ok {
+		timeout = time.Until(deadline)
+	}
+	oCtx, cancel := context.WithTimeout(context.Background(), timeout)
+	waitgroup := &sync.WaitGroup{}
+	t := time.Now()
+	defer func() {
+		log.Printf("Read GetKeys in %v", time.Since(t))
+	}()
+
 	mresp, err := s.runGetKeys(ctx, s.clients[0], req)
+
 	if err == nil {
 		for _, c := range s.clients[1:] {
+			waitgroup.Add(1)
 			go func() {
-				resp, err := s.runGetKeys(ctx, c, req)
+				resp, err := s.runGetKeys(oCtx, c, req)
 				if err == nil {
 					if len(resp.GetKeys()) != len(mresp.GetKeys()) {
 						gkCountDiffs.Inc()
 					}
 				}
+				if err != nil {
+					log.Printf("GetKeys err: %v", err)
+				}
+				waitgroup.Done()
 			}()
 		}
 	}
+
+	go func() {
+		waitgroup.Wait()
+		cancel()
+	}()
+
 	return mresp, err
 }
 
@@ -300,7 +334,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("pstore failed to listen on the serving port %v: %v", *port, err)
 	}
-	size := 1024 * 1024 * 1000
+	size := 1024 * 1024 * 2000
 	gs := grpc.NewServer(
 		grpc.MaxSendMsgSize(size),
 		grpc.MaxRecvMsgSize(size),
