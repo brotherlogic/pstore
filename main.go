@@ -265,12 +265,42 @@ func (s *Server) runDelete(ctx context.Context, client pstore, req *pb.DeleteReq
 }
 
 func (s *Server) Delete(ctx context.Context, req *pb.DeleteRequest) (*pb.DeleteResponse, error) {
-	mresp, err := s.runDelete(ctx, s.clients[0], req)
-	for _, c := range s.clients[1:] {
-		go func() {
-			s.runDelete(ctx, c, req)
-		}()
+	deadline, ok := ctx.Deadline()
+	timeout := time.Minute
+	if ok {
+		timeout = time.Until(deadline)
 	}
+	oCtx, cancel := context.WithTimeout(context.Background(), timeout)
+	waitgroup := &sync.WaitGroup{}
+	t := time.Now()
+	defer func() {
+		log.Printf("Read GetKeys in %v", time.Since(t))
+	}()
+
+	mresp, err := s.runDelete(ctx, s.clients[0], req)
+
+	if err == nil {
+		for _, c := range s.clients[1:] {
+			waitgroup.Add(1)
+			go func() {
+				_, terr := s.runDelete(oCtx, c, req)
+				if status.Code(terr) != status.Code(err) {
+					gkCountDiffs.Inc()
+				}
+
+				if err != nil {
+					log.Printf("Delete err: %v", err)
+				}
+				waitgroup.Done()
+			}()
+		}
+	}
+
+	go func() {
+		waitgroup.Wait()
+		cancel()
+	}()
+
 	return mresp, err
 }
 
