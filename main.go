@@ -349,7 +349,7 @@ func main() {
 	flag.Parse()
 
 	s := &Server{
-		wq: make(chan WriteElement, 100),
+		wq: make(chan *WriteElement, 100),
 	}
 
 	// Register the rstore client here
