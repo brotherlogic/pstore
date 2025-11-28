@@ -19,6 +19,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
@@ -89,6 +90,8 @@ type Server struct {
 	gclient ghbclient.GithubridgeClient
 
 	clients []pstore
+
+	wq chan *WriteElement
 }
 
 type pstore interface {
@@ -147,6 +150,12 @@ func (s *Server) Read(ctx context.Context, req *pb.ReadRequest) (*pb.ReadRespons
 						log.Printf("MEAD: %v => %v", req.GetKey(), string(mResp.GetValue().GetValue()))
 
 						rCountDiffs.Inc()
+					}
+				} else if status.Code(err) == codes.NotFound {
+					s.wq <- &WriteElement{
+						key:   req.GetKey(),
+						value: mResp.GetValue().GetValue(),
+						cname: c.Name(),
 					}
 				}
 				waitgroup.Done()
@@ -339,7 +348,9 @@ func (s *Server) Count(ctx context.Context, req *pb.CountRequest) (*pb.CountResp
 func main() {
 	flag.Parse()
 
-	s := &Server{}
+	s := &Server{
+		wq: make(chan *WriteElement, 100),
+	}
 
 	// Register the rstore client here
 	rsc, err := rstore_client.GetClient()
@@ -382,6 +393,9 @@ func main() {
 	go func() {
 		http.ListenAndServe(fmt.Sprintf(":%v", *metricsPort), nil)
 	}()
+
+	// Run the write queue
+	go s.runWriteQueue()
 
 	if err := gs.Serve(lis); err != nil {
 		log.Fatalf("pstore failed to serve: %v", err)
