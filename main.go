@@ -176,7 +176,7 @@ func (s *Server) runWrite(ctx context.Context, client pstore, req *pb.WriteReque
 	resp, err := client.Write(ctx, req)
 	wCount.With(prometheus.Labels{"client": client.Name(), "code": fmt.Sprintf("%v", status.Code(err))}).Inc()
 	if err == nil {
-		log.Printf("Write %v -> %v", req.GetKey(), client.Name())
+		log.Printf("Write %v -> %v (%v)", req.GetKey(), client.Name(), time.Since(t))
 		wCountTime.With(prometheus.Labels{"client": client.Name()}).Observe(float64(time.Since(t).Milliseconds()))
 	} else {
 		log.Printf("Write Fail: %v -> %v", req.GetKey(), err)
