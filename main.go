@@ -139,7 +139,7 @@ func (s *Server) Read(ctx context.Context, req *pb.ReadRequest) (*pb.ReadRespons
 	}
 	oCtx, cancel := context.WithTimeout(context.Background(), timeout)
 	waitgroup := &sync.WaitGroup{}
-	if err == nil {
+	if merr == nil {
 		for _, c := range s.clients[1:] {
 			waitgroup.Add(1)
 			go func() {
