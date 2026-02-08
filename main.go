@@ -130,7 +130,7 @@ func (s *Server) runRead(ctx context.Context, client pstore, req *pb.ReadRequest
 }
 
 func (s *Server) Read(ctx context.Context, req *pb.ReadRequest) (*pb.ReadResponse, error) {
-	mResp, err := s.runRead(ctx, s.clients[0], req)
+	mResp, merr := s.runRead(ctx, s.clients[0], req)
 
 	deadline, ok := ctx.Deadline()
 	timeout := time.Minute
@@ -139,15 +139,14 @@ func (s *Server) Read(ctx context.Context, req *pb.ReadRequest) (*pb.ReadRespons
 	}
 	oCtx, cancel := context.WithTimeout(context.Background(), timeout)
 	waitgroup := &sync.WaitGroup{}
-	if err == nil {
+	if merr == nil {
 		for _, c := range s.clients[1:] {
 			waitgroup.Add(1)
 			go func() {
 				resp, err := s.runRead(oCtx, c, req)
 				if err == nil {
 					if len(resp.GetValue().GetValue()) != len(mResp.GetValue().GetValue()) {
-						log.Printf("READ: %v => %v", req.GetKey(), string(resp.GetValue().GetValue()))
-						log.Printf("MEAD: %v => %v", req.GetKey(), string(mResp.GetValue().GetValue()))
+						log.Printf("READ Miss: %v => %v vs %v", req.GetKey(), len(string((resp.GetValue().GetValue()))), len(string(mResp.GetValue().GetValue())))
 
 						rCountDiffs.Inc()
 					}
@@ -157,6 +156,9 @@ func (s *Server) Read(ctx context.Context, req *pb.ReadRequest) (*pb.ReadRespons
 						value: mResp.GetValue().GetValue(),
 						cname: c.Name(),
 					}
+				}
+				if status.Code(err) != status.Code(merr) {
+					log.Printf("READ Miss: %v => %v vs %v", req.GetKey(), merr, err)
 				}
 				waitgroup.Done()
 			}()
@@ -168,7 +170,7 @@ func (s *Server) Read(ctx context.Context, req *pb.ReadRequest) (*pb.ReadRespons
 		cancel()
 	}()
 
-	return mResp, err
+	return mResp, merr
 }
 
 func (s *Server) runWrite(ctx context.Context, client pstore, req *pb.WriteRequest) (*pb.WriteResponse, error) {
