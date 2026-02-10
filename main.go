@@ -148,6 +148,13 @@ func (s *Server) Read(ctx context.Context, req *pb.ReadRequest) (*pb.ReadRespons
 					if len(resp.GetValue().GetValue()) != len(mResp.GetValue().GetValue()) {
 						log.Printf("READ Miss: %v => %v vs %v", req.GetKey(), len(string((resp.GetValue().GetValue()))), len(string(mResp.GetValue().GetValue())))
 
+						// Since we missed, do a re-write
+						s.wq <- &WriteElement{
+							key:   req.GetKey(),
+							value: mResp.GetValue().GetValue(),
+							cname: c.Name(),
+						}
+
 						rCountDiffs.Inc()
 					}
 				} else if status.Code(err) == codes.NotFound {
