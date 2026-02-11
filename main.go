@@ -130,6 +130,8 @@ func (s *Server) runRead(ctx context.Context, client pstore, req *pb.ReadRequest
 }
 
 func (s *Server) Read(ctx context.Context, req *pb.ReadRequest) (*pb.ReadResponse, error) {
+	log.Printf("Read %v", req.GetKey())
+	defer log.Printf("Finished Read %v", req.GetKey())
 	mResp, merr := s.runRead(ctx, s.clients[0], req)
 
 	deadline, ok := ctx.Deadline()
@@ -194,6 +196,8 @@ func (s *Server) runWrite(ctx context.Context, client pstore, req *pb.WriteReque
 }
 
 func (s *Server) Write(ctx context.Context, req *pb.WriteRequest) (*pb.WriteResponse, error) {
+	log.Printf("Write %v", req.GetKey())
+	defer log.Printf("Finished write %v", req.GetKey())
 	t := time.Now()
 	deadline, ok := ctx.Deadline()
 	timeout := time.Minute
@@ -235,6 +239,8 @@ func (s *Server) runGetKeys(ctx context.Context, client pstore, req *pb.GetKeysR
 }
 
 func (s *Server) GetKeys(ctx context.Context, req *pb.GetKeysRequest) (*pb.GetKeysResponse, error) {
+	log.Printf("GetKeys %v", req)
+	defer log.Printf("Finished GetKeys %v", req)
 	deadline, ok := ctx.Deadline()
 	timeout := time.Minute
 	if ok {
@@ -244,7 +250,7 @@ func (s *Server) GetKeys(ctx context.Context, req *pb.GetKeysRequest) (*pb.GetKe
 	waitgroup := &sync.WaitGroup{}
 	t := time.Now()
 	defer func() {
-		log.Printf("Read GetKeys in %v", time.Since(t))
+		log.Printf("Read GetKeys (%v) in %v", req, time.Since(t))
 	}()
 
 	mresp, err := s.runGetKeys(ctx, s.clients[0], req)
