@@ -367,13 +367,6 @@ func main() {
 		wq: make(chan *WriteElement, 100),
 	}
 
-	// Register the rstore client here
-	rsc, err := rstore_client.GetClient()
-	if err != nil {
-		log.Fatalf("Unable to reach rstore client")
-	}
-	s.clients = append(s.clients, &rstore_wrapper{rc: rsc})
-
 	pgc, err := getPGStore()
 	if err != nil {
 		log.Fatalf("Cannot dial pgstore client")
@@ -384,6 +377,13 @@ func main() {
 		log.Fatalf("Unable to get mstore client")
 	}
 	s.clients = append(s.clients, &mstore_wrapper{mc: msc})*/
+
+	// Register the rstore client here
+	rsc, err := rstore_client.GetClient()
+	if err != nil {
+		log.Fatalf("Unable to reach rstore client")
+	}
+	s.clients = append(s.clients, &rstore_wrapper{rc: rsc})
 
 	client, err := ghbclient.GetClientInternal()
 	if err != nil {
