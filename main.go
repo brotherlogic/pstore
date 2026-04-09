@@ -382,8 +382,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("Unable to reach rstore client")
 	}
+		s.clients = append(s.clients, pgc)
 	s.clients = append(s.clients, &rstore_wrapper{rc: rsc})
-	s.clients = append(s.clients, pgc)
 
 	client, err := ghbclient.GetClientInternal()
 	if err != nil {
