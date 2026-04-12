@@ -12,7 +12,7 @@ import (
 func getPGStore() (*pgstore_wrapper, error) {
 	conn, err := grpc.Dial("pgstore.pgstore:8080",
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(100*1024*1024)))
+		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(2000*1024*1024)))
 	if err != nil {
 		return nil, fmt.Errorf("dial error on %v -> %w", "pgstore.pgstore:8080", err)
 	}
