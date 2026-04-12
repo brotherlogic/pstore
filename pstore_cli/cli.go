@@ -16,8 +16,8 @@ func main() {
 	ctx, cancel := utils.ManualContext("pstore-cli", time.Hour)
 	defer cancel()
 
-	size := 1024 * 1024 * 2000
-	conn, err := grpc.Dial(os.Args[1], grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(size)))
+	size := 1024*1024*2000
+	conn, err := grpc.Dial(os.Args[1], grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(size)))
 	if err != nil {
 		log.Fatalf("Bad dial: %v", err)
 	}
