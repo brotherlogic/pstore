@@ -13,7 +13,6 @@ import (
 
 	ghbclient "github.com/brotherlogic/githubridge/client"
 	pb "github.com/brotherlogic/pstore/proto"
-	rstore_client "github.com/brotherlogic/rstore/client"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -377,13 +376,7 @@ func main() {
 	}
 	s.clients = append(s.clients, &mstore_wrapper{mc: msc})*/
 
-	// Register the rstore client here
-	rsc, err := rstore_client.GetClient()
-	if err != nil {
-		log.Fatalf("Unable to reach rstore client")
-	}
-		s.clients = append(s.clients, pgc)
-	s.clients = append(s.clients, &rstore_wrapper{rc: rsc})
+	s.clients = append(s.clients, pgc)
 
 	client, err := ghbclient.GetClientInternal()
 	if err != nil {

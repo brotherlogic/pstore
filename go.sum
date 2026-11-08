@@ -12,8 +12,6 @@ github.com/brotherlogic/mstore v0.30.0 h1:KFPTl5BYI5ZIJdWkHdkgGKKqRFjOoxzBbtZT/L
 github.com/brotherlogic/mstore v0.30.0/go.mod h1:y12/CI0YqflJAIo+kdTThOXAD3rxzPgBVl+MYkN1xks=
 github.com/brotherlogic/recordcollection v0.0.0-20240507141004-bfb0a1e980c6 h1:0a1gaVNjbTEDo+1eT98pHIMxojrIlxk69ZqYav5c6jQ=
 github.com/brotherlogic/recordcollection v0.0.0-20240507141004-bfb0a1e980c6/go.mod h1:ITVGSuIy9X6o/ymgp5tS3qcISVrY4I9qLwNYmu8K60Y=
-github.com/brotherlogic/rstore v0.69.0 h1:Yc/O9QnEXPhyGtFh6ydQHmZD5OApJpZAQ9Fayc6tgzY=
-github.com/brotherlogic/rstore v0.69.0/go.mod h1:rOovU5JH8h7Arqta0TNYZR7NUvfWbszoMOjctETK/KQ=
 github.com/cespare/xxhash/v2 v2.3.0 h1:UL815xU9SqsFlibzuggzjXhog7bL6oX9BbNZnL2UFvs=
 github.com/cespare/xxhash/v2 v2.3.0/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
