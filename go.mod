@@ -8,7 +8,6 @@ require (
 	github.com/brotherlogic/githubridge v0.2872.0
 	github.com/brotherlogic/goserver v0.0.0-20250608182006-4ace595931a5
 	github.com/brotherlogic/mstore v0.30.0
-	github.com/brotherlogic/rstore v0.69.0
 	github.com/prometheus/client_golang v1.23.2
 	google.golang.org/grpc v1.79.3
 	google.golang.org/protobuf v1.36.10
